@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>TPE // VSG Auto-Placer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg: #111213;
+  --s1: #18191b;
+  --s2: #1f2022;
+  --s3: #26282a;
+  --border: #2e3032;
+  --border2: #3a3d40;
+  --text: #dfe1e3;
+  --muted: #6b6f73;
+  --dim: #9a9ea2;
+  --accent: #e8a020;
+  --accent2: #b87c18;
+  --green: #3db86e;
+  --green-bg: #0d1f15;
+  --yellow: #d4a030;
+  --yellow-bg: #1c1600;
+  --red: #d45050;
+  --red-bg: #1f0d0d;
+  --blue: #4a90d4;
+  --blue-bg: #0d1620;
+  --cond: 'Barlow Condensed', sans-serif;
+  --body: 'Barlow', sans-serif;
+  --nav-h: 56px;
+  --top-h: 48px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* TOP BAR */
+.topbar {
+  background: var(--s1);
+  border-bottom: 1px solid var(--border);
+  height: var(--top-h);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 10px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 50;
+}
+.topbar-wordmark {
+  font-family: var(--cond);
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  flex: 1;
+}
+.topbar-sub {
+  font-family: var(--cond);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* MAIN CONTENT */
+.main-scroll {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(var(--nav-h) + 16px);
+}
+
+/* BOTTOM NAV */
+.nav {
+  background: var(--s1);
+  border-top: 1px solid var(--border);
+  height: var(--nav-h);
+  display: flex;
+  align-items: stretch;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+.nav-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  color: var(--muted);
+  font-family: var(--cond);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 0.15s;
+  padding: 6px 2px;
+}
+.nav-btn.active { color: var(--accent); }
+.nav-btn svg { width: 20px; height: 20px; }
+
+/* PAGE */
+.page { display: none; padding: 0; }
+.page.active { display: block; }
+
+/* PAGE HEADER */
+.page-header {
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--s1);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.page-title {
+  font-family: var(--cond);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  line-height: 1;
+}
+.page-sub {
+  font-family: var(--body);
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.pad { padding: 16px; }
+
+/* CARDS */
+.card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+.card-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-title {
+  font-family: var(--cond);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.card-body { padding: 12px 14px; }
+
+/* STAT GRID */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.stat-box {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 10px;
+  text-align: center;
+}
+.stat-val {
+  font-family: var(--cond);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+.stat-lbl {
+  font-family: var(--cond);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* FORM */
+.form-section {
+  margin-bottom: 18px;
+}
+.form-section-title {
+  font-family: var(--cond);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.form-grid.single { grid-template-columns: 1fr; }
+.form-grid.triple { grid-template-columns: 1fr 1fr 1fr; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field.span2 { grid-column: span 2; }
+label {
+  font-family: var(--cond);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+input, select, textarea {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 14px;
+  padding: 9px 10px;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.15s;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent2); }
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b6f73' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+  cursor: pointer;
+}
+option { background: #1f2022; }
+textarea { resize: vertical; min-height: 60px; }
+
+/* BUTTONS */
+.btn {
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  color: var(--text);
+  cursor: pointer;
+  font-family: var(--cond);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 10px 16px;
+  text-transform: uppercase;
+  transition: background 0.15s, border-color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn:hover { background: var(--s3); border-color: var(--muted); }
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0f0f0f;
+}
+.btn-primary:hover { background: var(--accent2); border-color: var(--accent2); }
+.btn-danger { border-color: var(--red); color: var(--red); }
+.btn-danger:hover { background: var(--red-bg); }
+.btn-full { width: 100%; }
+.btn-sm { font-size: 11px; padding: 6px 10px; }
+
+/* BADGE / CHIP */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--cond);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--s2);
+}
+.chip.green { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+.chip.yellow { background: var(--yellow-bg); border-color: var(--yellow); color: var(--yellow); }
+.chip.red { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+.chip.blue { background: var(--blue-bg); border-color: var(--blue); color: var(--blue); }
+.chip.accent { background: #1c1100; border-color: var(--accent); color: var(--accent); }
+
+/* RUN VIEW */
+.run-section { margin-bottom: 14px; }
+.run-label {
+  font-family: var(--cond);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 10px 16px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 60px;
+  z-index: 10;
+}
+.run-label span { color: var(--dim); font-weight: 400; }
+.sku-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--s1);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.sku-row:hover { background: var(--s2); }
+.sku-row.move-needed { border-left: 3px solid var(--yellow); }
+.sku-row.new-sku { border-left: 3px solid var(--green); }
+.pos-num {
+  font-family: var(--cond);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--muted);
+  min-width: 28px;
+  text-align: center;
+  line-height: 1.2;
+}
+.sku-main { flex: 1; min-width: 0; }
+.sku-name {
+  font-family: var(--body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sku-meta {
+  font-family: var(--cond);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+  letter-spacing: 0.02em;
+}
+.sku-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.sku-right {
+  text-align: right;
+  flex-shrink: 0;
+}
+.sku-price {
+  font-family: var(--cond);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.sku-loc {
+  font-family: var(--cond);
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.empty-run {
+  padding: 20px 16px;
+  font-family: var(--cond);
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* MOVE PLAN */
+.move-item {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--yellow);
+  border-radius: 3px;
+  margin-bottom: 8px;
+  padding: 12px 14px;
+}
+.move-item.hold { border-left-color: var(--red); }
+.move-num {
+  font-family: var(--cond);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.move-action {
+  font-family: var(--body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+}
+.move-reason {
+  font-size: 12px;
+  color: var(--dim);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* LOCATION MAP */
+.loc-run {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.loc-run-header {
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.loc-run-id {
+  font-family: var(--cond);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--accent);
+  min-width: 70px;
+}
+.loc-run-body { padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; }
+
+/* PRODUCT LIST */
+.product-item {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  margin-bottom: 6px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.product-item:hover { background: var(--s2); }
+.product-info { flex: 1; min-width: 0; }
+
+/* MODAL */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 200;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--s1);
+  border: 1px solid var(--border2);
+  border-radius: 8px 8px 0 0;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.2s ease;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-header {
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: var(--s1);
+  z-index: 1;
+}
+.modal-title {
+  font-family: var(--cond);
+  font-size: 18px;
+  font-weight: 700;
+}
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 22px;
+  padding: 0 4px;
+  line-height: 1;
+}
+.modal-body { padding: 16px; }
+
+/* TOAST */
+.toast {
+  position: fixed;
+  top: calc(var(--top-h) + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: var(--s3);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  color: var(--text);
+  font-family: var(--cond);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 10px 18px;
+  z-index: 300;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* IMPORT/EXPORT */
+.ie-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 10px;
+}
+.ie-title {
+  font-family: var(--cond);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 10px;
+}
+
+/* DASHBOARD ACTIVITY */
+.activity-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.activity-row:last-child { border-bottom: none; }
+.activity-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+.activity-text {
+  font-size: 13px;
+  color: var(--dim);
+  flex: 1;
+}
+.activity-time {
+  font-family: var(--cond);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+/* SEARCH */
+.search-bar {
+  padding: 10px 16px;
+  background: var(--s1);
+  border-bottom: 1px solid var(--border);
+}
+.search-bar input {
+  background: var(--bg);
+  font-size: 14px;
+}
+
+/* TABS */
+.tab-row {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--s1);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--cond);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 10px 14px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* DIVIDER */
+.divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+.mt8 { margin-top: 8px; }
+.mt12 { margin-top: 12px; }
+.mt16 { margin-top: 16px; }
+.flex-row { display: flex; gap: 8px; align-items: center; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.text-right { text-align: right; }
+
+.notice {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--blue);
+  border-radius: 3px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--dim);
+  line-height: 1.5;
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-wordmark">TPE</div>
+  <div class="topbar-sub">VSG Auto-Placer</div>
+</div>
+
+<div class="main-scroll" id="mainScroll">
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dash">
+    <div class="page-header">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Floor &amp; Decor, Avon MA</div>
+    </div>
+    <div class="pad">
+      <div class="stat-grid" id="dash-stats">
+        <div class="stat-box"><div class="stat-val" id="stat-skus">0</div><div class="stat-lbl">SKUs</div></div>
+        <div class="stat-box"><div class="stat-val" id="stat-moves">0</div><div class="stat-lbl">Moves</div></div>
+        <div class="stat-box"><div class="stat-val" id="stat-cats">0</div><div class="stat-lbl">Categories</div></div>
+      </div>
+      <div class="card mt8">
+        <div class="card-header"><span class="card-title">Category Breakdown</span></div>
+        <div class="card-body" id="dash-cats">
+          <div class="empty-run">No SKUs added yet</div>
+        </div>
+      </div>
+      <div class="card mt8">
+        <div class="card-header"><span class="card-title">Recent Activity</span></div>
+        <div class="card-body" id="dash-activity">
+          <div class="empty-run">No activity yet</div>
+        </div>
+      </div>
+      <div class="card mt8">
+        <div class="card-header"><span class="card-title">Pending Moves</span></div>
+        <div class="card-body" id="dash-moves-preview">
+          <div class="empty-run">No pending moves</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD SKU -->
+  <div class="page" id="page-add">
+    <div class="page-header">
+      <div class="page-title" id="add-page-title">Add SKU</div>
+      <div class="page-sub">Auto-placement runs on save</div>
+    </div>
+    <div class="pad">
+      <div class="form-section">
+        <div class="form-section-title">Identity</div>
+        <div class="form-grid">
+          <div class="field"><label>SKU #</label><input type="text" id="f-sku" placeholder="e.g. 100123"></div>
+          <div class="field"><label>Status</label>
+            <select id="f-status">
+              <option value="active">Active</option>
+              <option value="discontinued">Discontinued</option>
+              <option value="clearance">Clearance</option>
+              <option value="incoming">Incoming</option>
+            </select>
+          </div>
+          <div class="field span2"><label>Product Name</label><input type="text" id="f-name" placeholder="e.g. Cesari White Marble 12x24 Polished"></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Classification</div>
+        <div class="form-grid">
+          <div class="field span2">
+            <label>VSG Category</label>
+            <select id="f-vsg" onchange="onVsgChange()">
+              <option value="">Select Category</option>
+              <option value="LFT">Large Format (LFT)</option>
+              <option value="LFT Square">LFT Square</option>
+              <option value="White Marble Look">White Marble Look</option>
+              <option value="Marble Look">Marble Look</option>
+              <option value="Travertine/Limestone Look">Travertine/Limestone Look</option>
+              <option value="Contemporary">Contemporary</option>
+              <option value="Outdoor/Quarry/Saltillo">Outdoor/Quarry/Saltillo</option>
+              <option value="Slate Look">Slate Look</option>
+              <option value="Wood Look">Wood Look</option>
+            </select>
+          </div>
+          <div class="field" id="subclass-field">
+            <label>Sub-Class</label>
+            <select id="f-subclass">
+              <option value="">None</option>
+            </select>
+          </div>
+          <div class="field"><label>Family / Collection</label><input type="text" id="f-family" placeholder="e.g. Cesari"></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Specs</div>
+        <div class="form-grid triple">
+          <div class="field"><label>Size</label><input type="text" id="f-size" placeholder="12x24"></div>
+          <div class="field">
+            <label>Shape</label>
+            <select id="f-shape">
+              <option value="rectangle">Rectangle</option>
+              <option value="square">Square</option>
+              <option value="hexagon">Hexagon</option>
+              <option value="pattern">Pattern</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="field"><label>Finish</label><input type="text" id="f-finish" placeholder="Polished"></div>
+        </div>
+        <div class="form-grid mt8">
+          <div class="field"><label>Price / SQFT ($)</label><input type="number" id="f-price" placeholder="0.00" step="0.01" min="0"></div>
+          <div class="field"><label>Current Location</label><input type="text" id="f-loc" placeholder="e.g. A3-R2"></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Notes</div>
+        <div class="form-grid single">
+          <div class="field"><label>Notes</label><textarea id="f-notes" placeholder="Optional notes..."></textarea></div>
+        </div>
+      </div>
+      <input type="hidden" id="f-edit-id">
+      <div class="flex-row mt8">
+        <button class="btn btn-primary btn-full" onclick="saveSKU()">Save &amp; Auto-Place</button>
+      </div>
+      <button class="btn btn-danger btn-full mt8" id="delete-btn" style="display:none" onclick="deleteSKU()">Delete SKU</button>
+      <button class="btn btn-full mt8" onclick="clearForm()">Clear Form</button>
+    </div>
+  </div>
+
+  <!-- RUN VIEW -->
+  <div class="page" id="page-runs">
+    <div class="page-header">
+      <div class="page-title">Run View</div>
+      <div class="page-sub">Sorted by VSG rules</div>
+    </div>
+    <div class="tab-row" id="run-tabs"></div>
+    <div id="run-content"></div>
+  </div>
+
+  <!-- MOVE PLAN -->
+  <div class="page" id="page-moves">
+    <div class="page-header">
+      <div class="page-title">Move Plan</div>
+      <div class="page-sub">Pallet actions required</div>
+    </div>
+    <div class="pad" id="moves-content">
+      <div class="empty-run">No moves pending</div>
+    </div>
+  </div>
+
+  <!-- MORE / sub-pages -->
+  <div class="page" id="page-more">
+    <div class="page-header">
+      <div class="page-title">More</div>
+    </div>
+    <div class="pad">
+      <div class="form-grid single">
+        <button class="btn btn-full" style="margin-bottom:8px" onclick="navTo('products')">Product List</button>
+        <button class="btn btn-full" style="margin-bottom:8px" onclick="navTo('locmap')">Location Map Settings</button>
+        <button class="btn btn-full" style="margin-bottom:8px" onclick="navTo('ie')">Import / Export</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCT LIST -->
+  <div class="page" id="page-products">
+    <div class="page-header">
+      <div class="page-title">Product List</div>
+      <div class="page-sub">All SKUs</div>
+    </div>
+    <div class="search-bar">
+      <input type="text" id="product-search" placeholder="Search SKU, name, family..." oninput="renderProductList()">
+    </div>
+    <div id="product-list-content"></div>
+  </div>
+
+  <!-- LOCATION MAP -->
+  <div class="page" id="page-locmap">
+    <div class="page-header">
+      <div class="page-title">Location Map</div>
+      <div class="page-sub">Configure aisle and run assignments</div>
+    </div>
+    <div class="pad">
+      <div class="notice mt8" style="margin-bottom:14px">
+        Rename runs, swap R1/R2 for aisles 2-5, and assign category zones. Changes take effect immediately and re-run auto-placement.
+      </div>
+      <div id="locmap-content"></div>
+      <button class="btn btn-primary btn-full mt16" onclick="saveLocMap()">Save Location Map</button>
+    </div>
+  </div>
+
+  <!-- IMPORT / EXPORT -->
+  <div class="page" id="page-ie">
+    <div class="page-header">
+      <div class="page-title">Import / Export</div>
+    </div>
+    <div class="pad">
+      <div class="ie-card">
+        <div class="ie-title">Export JSON Backup</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Downloads all SKU data and location map as a JSON file.</p>
+        <button class="btn btn-primary btn-full" onclick="exportJSON()">Export All Data</button>
+      </div>
+      <div class="ie-card">
+        <div class="ie-title">Import JSON</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Import a previously exported JSON backup. This will overwrite current data.</p>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
+        <button class="btn btn-full" onclick="document.getElementById('import-file').click()">Select JSON File</button>
+      </div>
+      <div class="ie-card">
+        <div class="ie-title">Clear All Data</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Permanently removes all SKUs. Location map settings are preserved.</p>
+        <button class="btn btn-danger btn-full" onclick="clearAllData()">Clear All SKUs</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end main-scroll -->
+
+<!-- BOTTOM NAV -->
+<nav class="nav">
+  <button class="nav-btn active" id="nav-dash" onclick="navTo('dash')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Dash
+  </button>
+  <button class="nav-btn" id="nav-add" onclick="navTo('add')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Add SKU
+  </button>
+  <button class="nav-btn" id="nav-runs" onclick="navTo('runs')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    Runs
+  </button>
+  <button class="nav-btn" id="nav-moves" onclick="navTo('moves')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="5 9 2 12 5 15"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+    Moves
+  </button>
+  <button class="nav-btn" id="nav-more" onclick="navTo('more')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="19" r="1.5" fill="currentColor"/></svg>
+    More
+  </button>
+</nav>
+
+<!-- EDIT MODAL (same form reused) -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// DATA LAYER
+// ============================================================
+
+const STORAGE_KEY = 'tpe_skus';
+const LOC_MAP_KEY = 'tpe_locmap';
+const ACTIVITY_KEY = 'tpe_activity';
+
+// VSG category order
+const VSG_ORDER = [
+  'LFT', 'LFT Square',
+  'White Marble Look', 'Marble Look',
+  'Travertine/Limestone Look', 'Contemporary',
+  'Outdoor/Quarry/Saltillo',
+  'Slate Look', 'Wood Look'
+];
+
+const OUTDOOR_CLASS_ORDER = ['Outdoor Pattern','Saltillo','Brick Look','Paver Look','Quarry'];
+
+// Sub-classes per category
+const SUB_CLASSES = {
+  'LFT': ['24x48','30x60','Other LFT'],
+  'LFT Square': ['24x24','Other Square'],
+  'Outdoor/Quarry/Saltillo': ['Outdoor Pattern','Saltillo','Brick Look','Paver Look','Quarry'],
+  'Wood Look': ['Large Format Wood','Standard Wood'],
+  'Contemporary': ['Standard','Hexagon','Pattern']
+};
+
+// Default location map
+const DEFAULT_LOC_MAP = {
+  'A1':       { label: 'Aisle 1', desc: 'Wood Look (closest to Wood Dept)', cats: ['Wood Look'], runCount: 1 },
+  'A2-R1':    { label: 'A2 Run 1', desc: '', cats: [], runCount: null },
+  'A2-R2':    { label: 'A2 Run 2', desc: '', cats: [], runCount: null },
+  'A3-R1':    { label: 'A3 Run 1', desc: '', cats: [], runCount: null },
+  'A3-R2':    { label: 'A3 Run 2', desc: '', cats: [], runCount: null },
+  'A4-R1':    { label: 'A4 Run 1', desc: '', cats: [], runCount: null },
+  'A4-R2':    { label: 'A4 Run 2', desc: '', cats: [], runCount: null },
+  'A5-R1':    { label: 'A5 Run 1', desc: '', cats: [], runCount: null },
+  'A5-R2':    { label: 'A5 Run 2', desc: '', cats: [], runCount: null },
+  'A6':       { label: 'Aisle 6', desc: 'LFT (30x60, 24x48) — leads to slab display', cats: ['LFT','LFT Square'], runCount: 1 },
+  'A6-Slab':  { label: 'A6 Endcap / Slab', desc: 'Slab display farthest from Design Center', cats: [], runCount: 1 }
+};
+
+// Default order of runs in display
+const RUN_ORDER = ['A1','A2-R1','A2-R2','A3-R1','A3-R2','A4-R1','A4-R2','A5-R1','A5-R2','A6','A6-Slab'];
+
+function loadSKUs() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
+}
+function saveSKUs(skus) { localStorage.setItem(STORAGE_KEY, JSON.stringify(skus)); }
+function loadLocMap() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LOC_MAP_KEY));
+    if (saved) return saved;
+  } catch {}
+  return JSON.parse(JSON.stringify(DEFAULT_LOC_MAP));
+}
+function saveLocMapData(lm) { localStorage.setItem(LOC_MAP_KEY, JSON.stringify(lm)); }
+function loadActivity() {
+  try { return JSON.parse(localStorage.getItem(ACTIVITY_KEY)) || []; } catch { return []; }
+}
+function addActivity(text) {
+  const acts = loadActivity();
+  acts.unshift({ text, ts: Date.now() });
+  if (acts.length > 30) acts.length = 30;
+  localStorage.setItem(ACTIVITY_KEY, JSON.stringify(acts));
+}
+function timeAgo(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s/60)}m ago`;
+  if (s < 86400) return `${Math.floor(s/3600)}h ago`;
+  return `${Math.floor(s/86400)}d ago`;
+}
+
+// ============================================================
+// VSG SORT ENGINE
+// ============================================================
+
+function parseDims(sizeStr) {
+  if (!sizeStr) return { w: 0, h: 0, area: 0 };
+  const s = sizeStr.toLowerCase().replace(/\s/g,'');
+  const m = s.match(/(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)/);
+  if (!m) return { w: 0, h: 0, area: 0 };
+  const a = parseFloat(m[1]), b = parseFloat(m[2]);
+  return { w: Math.min(a,b), h: Math.max(a,b), area: a*b };
+}
+
+function compareNum(a, b) { return a - b; }
+
+// Primary comparator for two SKUs within same category/zone
+// Returns negative if a comes first, positive if b comes first
+function compareSKUs(a, b) {
+  const cat = a.vsg;
+  const pa = parseFloat(a.price) || 0;
+  const pb = parseFloat(b.price) || 0;
+  const da = parseDims(a.size);
+  const db = parseDims(b.size);
+  const fa = (a.family || '').toLowerCase();
+  const fb = (b.family || '').toLowerCase();
+  const sha = (a.shape || 'rectangle').toLowerCase();
+  const shb = (b.shape || 'rectangle').toLowerCase();
+
+  // Shape priority helper (rect < square < hex < pattern < other)
+  function shapeRank(sh) {
+    return ['rectangle','square','hexagon','pattern','other'].indexOf(sh) + 1 || 5;
+  }
+
+  switch (cat) {
+    case 'LFT':
+    case 'LFT Square': {
+      // size desc, then sub-dept/sub-class, then price high-to-low
+      if (db.area !== da.area) return db.area - da.area; // larger first
+      const sa = (a.subclass||'').toLowerCase();
+      const sb = (b.subclass||'').toLowerCase();
+      if (sa !== sb) return sa.localeCompare(sb);
+      return pb - pa; // high to low
+    }
+    case 'White Marble Look':
+    case 'Marble Look': {
+      // family first, rect before square, price low to high, one-offs after families
+      const fav = fa || '_zz_oneoff';
+      const fbv = fb || '_zz_oneoff';
+      if (fav !== fbv) return fav.localeCompare(fbv);
+      if (sha !== shb) return shapeRank(sha) - shapeRank(shb);
+      return compareNum(pa, pb);
+    }
+    case 'Travertine/Limestone Look': {
+      // price low to high, families together, rect before square within family
+      if (fa !== fb) return fa.localeCompare(fb);
+      if (sha !== shb) return shapeRank(sha) - shapeRank(shb);
+      return compareNum(pa, pb);
+    }
+    case 'Contemporary': {
+      // hexagon/pattern after regular; family together; rect before sq; low-high
+      const hexOrPat = sh => sh === 'hexagon' || sh === 'pattern';
+      const aSpec = hexOrPat(sha) ? 1 : 0;
+      const bSpec = hexOrPat(shb) ? 1 : 0;
+      if (aSpec !== bSpec) return aSpec - bSpec;
+      if (fa !== fb) return fa.localeCompare(fb);
+      if (sha !== shb) return shapeRank(sha) - shapeRank(shb);
+      return compareNum(pa, pb);
+    }
+    case 'Outdoor/Quarry/Saltillo': {
+      // class order first, then low-high
+      const ra = OUTDOOR_CLASS_ORDER.indexOf(a.subclass||'');
+      const rb = OUTDOOR_CLASS_ORDER.indexOf(b.subclass||'');
+      const rav = ra === -1 ? 99 : ra;
+      const rbv = rb === -1 ? 99 : rb;
+      if (rav !== rbv) return rav - rbv;
+      return compareNum(pa, pb);
+    }
+    case 'Slate Look': {
+      // size first, then low-high
+      if (da.area !== db.area) return db.area - da.area; // larger first
+      return compareNum(pa, pb);
+    }
+    case 'Wood Look': {
+      // LF wood first; outer run high-to-low; inner run low-to-high
+      // subclass: Large Format Wood comes first
+      const sa = (a.subclass||'').toLowerCase().includes('large') ? 0 : 1;
+      const sb = (b.subclass||'').toLowerCase().includes('large') ? 0 : 1;
+      if (sa !== sb) return sa - sb;
+      // Default to low-to-high; run-specific direction handled in render
+      return compareNum(pa, pb);
+    }
+    default:
+      return compareNum(pa, pb);
+  }
+}
+
+// Assign a SKU to the best run based on VSG category and location map
+function assignRun(sku, locMap) {
+  const cat = sku.vsg;
+  // Look for explicit cat assignment in locMap
+  for (const runId of RUN_ORDER) {
+    const run = locMap[runId];
+    if (run && run.cats && run.cats.includes(cat)) return runId;
+  }
+  // Defaults by category
+  if (cat === 'LFT' || cat === 'LFT Square') return 'A6';
+  if (cat === 'Wood Look') return 'A1';
+  // For other categories, find first unclaimed run (A2-A5)
+  const midRuns = ['A2-R1','A2-R2','A3-R1','A3-R2','A4-R1','A4-R2','A5-R1','A5-R2'];
+  // Check if any mid run has this category
+  for (const r of midRuns) {
+    if (locMap[r] && locMap[r].cats && locMap[r].cats.includes(cat)) return r;
+  }
+  return null; // unassigned
+}
+
+// Sort all SKUs and assign positions, detect moves
+function runAutoPlace(skus, locMap) {
+  // Group by assigned run
+  const grouped = {};
+  for (const runId of RUN_ORDER) grouped[runId] = [];
+  grouped['Unassigned'] = [];
+
+  for (const sku of skus) {
+    const run = assignRun(sku, locMap);
+    if (run && grouped[run]) {
+      grouped[run].push(sku);
+    } else {
+      grouped['Unassigned'].push(sku);
+    }
+  }
+
+  // Sort each group
+  for (const runId of RUN_ORDER) {
+    if (grouped[runId]) {
+      grouped[runId].sort((a, b) => {
+        // First sort by VSG category order within same run
+        const ai = VSG_ORDER.indexOf(a.vsg);
+        const bi = VSG_ORDER.indexOf(b.vsg);
+        if (ai !== bi) return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+        // Then by VSG rules within same category
+        return compareSKUs(a, b);
+      });
+    }
+  }
+
+  // Generate move plan
+  const moves = [];
+  for (const runId of RUN_ORDER) {
+    const runSkus = grouped[runId];
+    if (!runSkus) continue;
+    runSkus.forEach((sku, newPos) => {
+      const currentLoc = sku.currentLocation || '';
+      const currentPos = sku.currentPosition;
+      const recommendedPos = newPos + 1;
+      const recommendedLoc = runId;
+
+      const locChanged = currentLoc && currentLoc !== recommendedLoc;
+      const posChanged = typeof currentPos === 'number' && currentPos !== recommendedPos;
+
+      if (locChanged) {
+        moves.push({
+          skuNum: sku.sku,
+          name: sku.name,
+          from: `${currentLoc}${currentPos ? ' pos ' + currentPos : ''}`,
+          to: `${recommendedLoc} position ${recommendedPos}`,
+          reason: `Category ${sku.vsg} belongs in ${recommendedLoc} per Location Map.`,
+          type: 'move'
+        });
+      } else if (posChanged) {
+        moves.push({
+          skuNum: sku.sku,
+          name: sku.name,
+          from: `${recommendedLoc} position ${currentPos}`,
+          to: `${recommendedLoc} position ${recommendedPos}`,
+          reason: buildMoveReason(sku, runSkus, newPos),
+          type: 'shift'
+        });
+      }
+    });
+  }
+
+  return { grouped, moves };
+}
+
+function buildMoveReason(sku, runSkus, newPos) {
+  const cat = sku.vsg;
+  const pr = parseFloat(sku.price)||0;
+  if (cat === 'White Marble Look' || cat === 'Marble Look') {
+    return `Maintain family block and low-to-high price flow within ${cat}.`;
+  }
+  if (cat === 'LFT' || cat === 'LFT Square') {
+    return `Maintain size-first, high-to-low price flow for ${cat}.`;
+  }
+  if (cat === 'Outdoor/Quarry/Saltillo') {
+    return `Class order: ${sku.subclass || 'unknown class'}. Price low-to-high within class.`;
+  }
+  return `VSG sort order requires position ${newPos+1} for $${pr.toFixed(2)}/sqft item.`;
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+
+const MAIN_PAGES = ['dash','add','runs','moves','more'];
+let currentPage = 'dash';
+
+function navTo(page) {
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  // Deactivate nav buttons
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+  const target = `page-${page}`;
+  const el = document.getElementById(target);
+  if (el) {
+    el.classList.add('active');
+    currentPage = page;
+    document.getElementById('mainScroll').scrollTop = 0;
+  }
+
+  const navEl = document.getElementById(`nav-${page}`);
+  if (navEl) navEl.classList.add('active');
+  // Highlight "more" for sub-pages
+  if (['products','locmap','ie'].includes(page)) {
+    document.getElementById('nav-more').classList.add('active');
+  }
+
+  // Render page
+  if (page === 'dash') renderDash();
+  if (page === 'runs') renderRunView();
+  if (page === 'moves') renderMovePlan();
+  if (page === 'products') renderProductList();
+  if (page === 'locmap') renderLocMap();
+  if (page === 'add') {
+    document.getElementById('add-page-title').textContent = 'Add SKU';
+    document.getElementById('delete-btn').style.display = 'none';
+    document.getElementById('f-edit-id').value = '';
+  }
+}
+
+// ============================================================
+// FORM / SUBCLASS
+// ============================================================
+
+function onVsgChange() {
+  const cat = document.getElementById('f-vsg').value;
+  const sel = document.getElementById('f-subclass');
+  const classes = SUB_CLASSES[cat] || [];
+  sel.innerHTML = '<option value="">None</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+  document.getElementById('subclass-field').style.display = classes.length ? '' : 'none';
+}
+
+function getFormData() {
+  return {
+    sku: document.getElementById('f-sku').value.trim(),
+    name: document.getElementById('f-name').value.trim(),
+    vsg: document.getElementById('f-vsg').value,
+    subclass: document.getElementById('f-subclass').value,
+    family: document.getElementById('f-family').value.trim(),
+    size: document.getElementById('f-size').value.trim(),
+    shape: document.getElementById('f-shape').value,
+    finish: document.getElementById('f-finish').value.trim(),
+    price: document.getElementById('f-price').value,
+    currentLocation: document.getElementById('f-loc').value.trim(),
+    status: document.getElementById('f-status').value,
+    notes: document.getElementById('f-notes').value.trim(),
+  };
+}
+
+function fillForm(sku) {
+  document.getElementById('f-sku').value = sku.sku || '';
+  document.getElementById('f-name').value = sku.name || '';
+  document.getElementById('f-vsg').value = sku.vsg || '';
+  onVsgChange();
+  document.getElementById('f-subclass').value = sku.subclass || '';
+  document.getElementById('f-family').value = sku.family || '';
+  document.getElementById('f-size').value = sku.size || '';
+  document.getElementById('f-shape').value = sku.shape || 'rectangle';
+  document.getElementById('f-finish').value = sku.finish || '';
+  document.getElementById('f-price').value = sku.price || '';
+  document.getElementById('f-loc').value = sku.currentLocation || '';
+  document.getElementById('f-status').value = sku.status || 'active';
+  document.getElementById('f-notes').value = sku.notes || '';
+}
+
+function clearForm() {
+  ['f-sku','f-name','f-family','f-size','f-finish','f-price','f-loc','f-notes'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f-vsg').value = '';
+  document.getElementById('f-shape').value = 'rectangle';
+  document.getElementById('f-status').value = 'active';
+  document.getElementById('f-subclass').value = '';
+  document.getElementById('f-edit-id').value = '';
+  document.getElementById('add-page-title').textContent = 'Add SKU';
+  document.getElementById('delete-btn').style.display = 'none';
+  onVsgChange();
+}
+
+function saveSKU() {
+  const data = getFormData();
+  if (!data.sku) { showToast('SKU # is required.'); return; }
+  if (!data.vsg) { showToast('VSG Category is required.'); return; }
+
+  let skus = loadSKUs();
+  const editId = document.getElementById('f-edit-id').value;
+
+  if (editId) {
+    const idx = skus.findIndex(s => s.id === editId);
+    if (idx !== -1) {
+      const prev = skus[idx];
+      skus[idx] = { ...prev, ...data, id: editId, updatedAt: Date.now() };
+      addActivity(`Edited SKU ${data.sku} — ${data.name}`);
+    }
+  } else {
+    const newId = 'sku_' + Date.now();
+    skus.push({ ...data, id: newId, addedAt: Date.now() });
+    addActivity(`Added SKU ${data.sku} — ${data.name}`);
+  }
+
+  saveSKUs(skus);
+  showToast(editId ? 'SKU updated. Re-sorting...' : 'SKU added. Auto-placing...');
+  clearForm();
+  navTo('runs');
+}
+
+function editSKU(id) {
+  const skus = loadSKUs();
+  const sku = skus.find(s => s.id === id);
+  if (!sku) return;
+  fillForm(sku);
+  document.getElementById('f-edit-id').value = id;
+  document.getElementById('add-page-title').textContent = 'Edit SKU';
+  document.getElementById('delete-btn').style.display = '';
+  navTo('add');
+  document.getElementById('mainScroll').scrollTop = 0;
+}
+
+function deleteSKU() {
+  const id = document.getElementById('f-edit-id').value;
+  if (!id) return;
+  if (!confirm('Delete this SKU?')) return;
+  let skus = loadSKUs();
+  const sku = skus.find(s => s.id === id);
+  skus = skus.filter(s => s.id !== id);
+  saveSKUs(skus);
+  if (sku) addActivity(`Deleted SKU ${sku.sku} — ${sku.name}`);
+  clearForm();
+  showToast('SKU deleted.');
+  navTo('products');
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+
+function renderDash() {
+  const skus = loadSKUs();
+  const locMap = loadLocMap();
+  const { grouped, moves } = runAutoPlace(skus, locMap);
+  const activity = loadActivity();
+
+  document.getElementById('stat-skus').textContent = skus.length;
+  document.getElementById('stat-moves').textContent = moves.length;
+  const cats = [...new Set(skus.map(s => s.vsg).filter(Boolean))];
+  document.getElementById('stat-cats').textContent = cats.length;
+
+  // Category breakdown
+  const catEl = document.getElementById('dash-cats');
+  if (cats.length === 0) {
+    catEl.innerHTML = '<div class="empty-run">No SKUs added yet</div>';
+  } else {
+    const catCounts = {};
+    skus.forEach(s => { if (s.vsg) catCounts[s.vsg] = (catCounts[s.vsg]||0)+1; });
+    catEl.innerHTML = VSG_ORDER.filter(c => catCounts[c]).map(c => `
+      <div class="flex-between" style="padding:6px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:13px;color:var(--dim)">${c}</span>
+        <span class="chip accent">${catCounts[c]} SKU${catCounts[c]>1?'s':''}</span>
+      </div>
+    `).join('');
+  }
+
+  // Activity
+  const actEl = document.getElementById('dash-activity');
+  if (activity.length === 0) {
+    actEl.innerHTML = '<div class="empty-run">No activity yet</div>';
+  } else {
+    actEl.innerHTML = activity.slice(0,6).map(a => `
+      <div class="activity-row">
+        <div class="activity-dot"></div>
+        <div class="activity-text">${a.text}</div>
+        <div class="activity-time">${timeAgo(a.ts)}</div>
+      </div>
+    `).join('');
+  }
+
+  // Pending moves preview
+  const movEl = document.getElementById('dash-moves-preview');
+  if (moves.length === 0) {
+    movEl.innerHTML = '<div class="empty-run">No pending moves</div>';
+  } else {
+    movEl.innerHTML = moves.slice(0,3).map(m => `
+      <div class="activity-row">
+        <div class="activity-dot" style="background:var(--yellow)"></div>
+        <div class="activity-text" style="font-size:12px">${m.type === 'move' ? 'Move' : 'Shift'} SKU ${m.skuNum}: ${m.from} → ${m.to}</div>
+      </div>
+    `).join('') + (moves.length > 3 ? `<div style="font-size:12px;color:var(--muted);padding:8px 0;text-align:center">+${moves.length-3} more moves</div>` : '');
+  }
+}
+
+// ============================================================
+// RUN VIEW
+// ============================================================
+
+let activeRunTab = 'A1';
+
+function renderRunView() {
+  const skus = loadSKUs();
+  const locMap = loadLocMap();
+  const { grouped } = runAutoPlace(skus, locMap);
+
+  // Build tabs
+  const allRuns = [...RUN_ORDER, 'Unassigned'];
+  const tabRow = document.getElementById('run-tabs');
+  tabRow.innerHTML = allRuns.map(r => {
+    const count = grouped[r] ? grouped[r].length : 0;
+    return `<button class="tab-btn ${r===activeRunTab?'active':''}" onclick="setRunTab('${r}')">${locMap[r]?locMap[r].label:r} <span style="opacity:0.5">(${count})</span></button>`;
+  }).join('');
+
+  renderRunContent(grouped, locMap);
+}
+
+function setRunTab(runId) {
+  activeRunTab = runId;
+  const skus = loadSKUs();
+  const locMap = loadLocMap();
+  const { grouped } = runAutoPlace(skus, locMap);
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderRunContent(grouped, locMap);
+}
+
+function renderRunContent(grouped, locMap) {
+  const runSkus = grouped[activeRunTab] || [];
+  const el = document.getElementById('run-content');
+
+  if (runSkus.length === 0) {
+    el.innerHTML = `<div class="empty-run" style="padding:40px 16px">No SKUs assigned to this run.<br><span style="font-size:11px;margin-top:6px;display:block">Add SKUs or update Location Map to assign categories here.</span></div>`;
+    return;
+  }
+
+  // Detect move-needed (position differs from currentPosition)
+  el.innerHTML = runSkus.map((sku, i) => {
+    const recPos = i + 1;
+    const curLoc = sku.currentLocation || '';
+    const needsMove = curLoc && curLoc !== activeRunTab;
+    const pr = parseFloat(sku.price)||0;
+    return `
+    <div class="sku-row ${needsMove?'move-needed':''}" onclick="editSKU('${sku.id}')">
+      <div class="pos-num">${recPos}</div>
+      <div class="sku-main">
+        <div class="sku-name">${sku.name || 'Unnamed SKU'}</div>
+        <div class="sku-meta">${sku.sku ? '#'+sku.sku+' ' : ''}${sku.size||''} ${sku.shape||''} ${sku.family?'· '+sku.family:''}</div>
+        <div class="sku-chips">
+          <span class="chip">${sku.vsg||'No Cat'}</span>
+          ${sku.subclass ? `<span class="chip">${sku.subclass}</span>` : ''}
+          ${sku.finish ? `<span class="chip">${sku.finish}</span>` : ''}
+          ${needsMove ? `<span class="chip yellow">MOVE</span>` : ''}
+          ${sku.status==='clearance'?`<span class="chip red">CLR</span>`:''}
+          ${sku.status==='discontinued'?`<span class="chip red">DISC</span>`:''}
+        </div>
+      </div>
+      <div class="sku-right">
+        ${pr > 0 ? `<div class="sku-price">$${pr.toFixed(2)}</div>` : ''}
+        <div class="sku-loc">${curLoc || 'No loc'}</div>
+        <div class="sku-loc" style="color:var(--green)">→ Pos ${recPos}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// MOVE PLAN
+// ============================================================
+
+function renderMovePlan() {
+  const skus = loadSKUs();
+  const locMap = loadLocMap();
+  const { moves } = runAutoPlace(skus, locMap);
+  const el = document.getElementById('moves-content');
+
+  if (moves.length === 0) {
+    el.innerHTML = `<div class="notice">No moves detected. All SKUs are either in their correct position or do not have a current location set.<br><br>To generate move suggestions, set the "Current Location" field on each SKU.</div>`;
+    return;
+  }
+
+  el.innerHTML = moves.map((m, i) => `
+    <div class="move-item ${m.type==='hold'?'hold':''}">
+      <div class="move-num">Action ${i+1} — SKU ${m.skuNum}</div>
+      <div class="move-action">
+        ${m.type==='hold' ? '⚠ Hold' : 'Move'} <strong>${m.name||m.skuNum}</strong><br>
+        From: <strong>${m.from}</strong> → To: <strong>${m.to}</strong>
+      </div>
+      <div class="move-reason">${m.reason}</div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// PRODUCT LIST
+// ============================================================
+
+function renderProductList() {
+  const skus = loadSKUs();
+  const q = (document.getElementById('product-search').value||'').toLowerCase();
+  const filtered = skus.filter(s =>
+    !q ||
+    (s.sku||'').toLowerCase().includes(q) ||
+    (s.name||'').toLowerCase().includes(q) ||
+    (s.family||'').toLowerCase().includes(q) ||
+    (s.vsg||'').toLowerCase().includes(q)
+  );
+  const el = document.getElementById('product-list-content');
+
+  if (filtered.length === 0) {
+    el.innerHTML = '<div class="empty-run" style="padding:40px 16px">No SKUs found.</div>';
+    return;
+  }
+
+  el.innerHTML = filtered.map(s => {
+    const pr = parseFloat(s.price)||0;
+    return `<div class="product-item" onclick="editSKU('${s.id}')">
+      <div class="product-info">
+        <div class="sku-name">${s.name||'Unnamed'}</div>
+        <div class="sku-meta">#${s.sku||'—'} · ${s.size||'?'} · ${s.vsg||'No Cat'}</div>
+        <div class="sku-chips mt8">
+          <span class="chip">${s.vsg||'—'}</span>
+          ${s.family?`<span class="chip">${s.family}</span>`:''}
+          ${s.status==='clearance'?`<span class="chip red">CLR</span>`:''}
+          ${s.status==='discontinued'?`<span class="chip red">DISC</span>`:''}
+        </div>
+      </div>
+      <div class="sku-right">
+        ${pr>0?`<div class="sku-price">$${pr.toFixed(2)}</div>`:''}
+        <div class="sku-loc">${s.currentLocation||'No loc'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// LOCATION MAP
+// ============================================================
+
+function renderLocMap() {
+  const locMap = loadLocMap();
+  const el = document.getElementById('locmap-content');
+
+  el.innerHTML = RUN_ORDER.map(runId => {
+    const run = locMap[runId] || { label: runId, desc: '', cats: [] };
+    const isSwappable = runId.includes('-R');
+    const cats = run.cats || [];
+    return `
+    <div class="loc-run">
+      <div class="loc-run-header">
+        <div class="loc-run-id">${runId}</div>
+        <input type="text" id="lm-label-${runId}" value="${run.label||runId}" style="flex:1;font-size:13px;padding:6px 8px" placeholder="Label">
+      </div>
+      <div class="loc-run-body">
+        <div class="field">
+          <label>Description</label>
+          <input type="text" id="lm-desc-${runId}" value="${run.desc||''}" placeholder="Optional notes">
+        </div>
+        <div class="field">
+          <label>Assigned VSG Categories</label>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+            ${VSG_ORDER.map(cat => `
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:none;color:var(--dim)">
+                <input type="checkbox" data-run="${runId}" data-cat="${cat}" ${cats.includes(cat)?'checked':''} style="width:14px;height:14px;padding:0;accent-color:var(--accent)">
+                ${cat}
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function saveLocMap() {
+  const locMap = loadLocMap();
+  RUN_ORDER.forEach(runId => {
+    if (!locMap[runId]) locMap[runId] = {};
+    const labelEl = document.getElementById(`lm-label-${runId}`);
+    const descEl = document.getElementById(`lm-desc-${runId}`);
+    if (labelEl) locMap[runId].label = labelEl.value;
+    if (descEl) locMap[runId].desc = descEl.value;
+    // Cats
+    const checkboxes = document.querySelectorAll(`input[data-run="${runId}"]`);
+    locMap[runId].cats = [];
+    checkboxes.forEach(cb => { if (cb.checked) locMap[runId].cats.push(cb.dataset.cat); });
+  });
+  saveLocMapData(locMap);
+  addActivity('Location Map updated');
+  showToast('Location Map saved. Re-sorting all SKUs...');
+}
+
+// ============================================================
+// IMPORT / EXPORT
+// ============================================================
+
+function exportJSON() {
+  const data = {
+    skus: loadSKUs(),
+    locMap: loadLocMap(),
+    activity: loadActivity(),
+    exportedAt: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `tpe-backup-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Export complete.');
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.skus) saveSKUs(data.skus);
+      if (data.locMap) saveLocMapData(data.locMap);
+      addActivity('Imported JSON backup');
+      showToast('Import successful.');
+      renderDash();
+    } catch {
+      showToast('Import failed. Invalid JSON.');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function clearAllData() {
+  if (!confirm('Clear all SKUs? Location map will be preserved.')) return;
+  saveSKUs([]);
+  localStorage.removeItem(ACTIVITY_KEY);
+  showToast('All SKUs cleared.');
+  navTo('dash');
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+  onVsgChange();
+  renderDash();
+});
+</script>
+</body>
+</html>
